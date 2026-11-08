@@ -1,979 +1,541 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Focus Pulse - Study Tracker & Growth Analytics</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Google Fonts: Plus Jakarta Sans -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-            },
-            accent: {
-              cyan: '#06b6d4',
-              emerald: '#10b981',
-              violet: '#8b5cf6',
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusPulse - Math & Stat Study Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        dark: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155'
+                        }
+                    }
+                }
             }
-          }
         }
-      }
-    }
-  </script>
-
-  <style>
-    body {
-      background-color: #0b0f17;
-      color: #f3f4f6;
-    }
-    .glass-card {
-      background: rgba(17, 24, 39, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-    .glow-indigo {
-      box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.25);
-    }
-    .glow-cyan {
-      box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.25);
-    }
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0f172a;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-    }
-  </style>
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased text-slate-100 selection:bg-brand-500 selection:text-white">
-
-  <!-- Header / Navigation -->
-  <header class="border-b border-slate-800/80 bg-slate-950/60 sticky top-0 z-50 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="p-2 bg-gradient-to-tr from-brand-600 to-accent-cyan rounded-xl shadow-lg shadow-brand-500/20">
-          <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
-        </div>
-        <div>
-          <h1 class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-            FocusPulse
-          </h1>
-          <p class="text-[10px] text-slate-400 -mt-1 font-medium tracking-wide">STUDY GROWTH ANALYTICS</p>
-        </div>
-      </div>
-
-      <div class="flex items-center space-x-3">
-        <button id="clearDataBtn" class="px-3 py-1.5 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 rounded-lg transition-all">
-          Reset Data
-        </button>
-        <button id="exportBtn" class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 rounded-lg transition-all flex items-center gap-1.5">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-    <!-- KPI Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Total Hours Card -->
-      <div class="glass-card rounded-2xl p-5 relative overflow-hidden group hover:border-brand-500/40 transition-all duration-300 glow-indigo">
-        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-500/10 rounded-full blur-xl group-hover:bg-brand-500/20 transition-all"></div>
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Study Time</span>
-          <div class="p-2 bg-brand-500/10 text-brand-400 rounded-lg">
-            <i data-lucide="clock" class="w-5 h-5"></i>
-          </div>
-        </div>
-        <div class="flex items-baseline space-x-2">
-          <span id="kpiTotalHours" class="text-3xl font-black text-white">0.0</span>
-          <span class="text-xs text-slate-400">hrs</span>
-        </div>
-        <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
-          <span id="kpiGrowthTag" class="text-emerald-400 font-semibold inline-flex items-center">
-            <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 mr-0.5"></i> +0%
-          </span>
-          vs last 7 days
-        </p>
-      </div>
-
-      <!-- Current Streak Card -->
-      <div class="glass-card rounded-2xl p-5 relative overflow-hidden group hover:border-amber-500/40 transition-all duration-300">
-        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all"></div>
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Streak</span>
-          <div class="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
-            <i data-lucide="flame" class="w-5 h-5"></i>
-          </div>
-        </div>
-        <div class="flex items-baseline space-x-2">
-          <span id="kpiStreak" class="text-3xl font-black text-white">0</span>
-          <span class="text-xs text-slate-400">days</span>
-        </div>
-        <p id="kpiStreakMsg" class="text-[11px] text-slate-400 mt-2">Log daily to keep your flame alive!</p>
-      </div>
-
-      <!-- Daily Average Card -->
-      <div class="glass-card rounded-2xl p-5 relative overflow-hidden group hover:border-accent-cyan/40 transition-all duration-300 glow-cyan">
-        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-accent-cyan/10 rounded-full blur-xl group-hover:bg-accent-cyan/20 transition-all"></div>
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Daily Average</span>
-          <div class="p-2 bg-accent-cyan/10 text-accent-cyan rounded-lg">
-            <i data-lucide="line-chart" class="w-5 h-5"></i>
-          </div>
-        </div>
-        <div class="flex items-baseline space-x-2">
-          <span id="kpiAvgHours" class="text-3xl font-black text-white">0.0</span>
-          <span class="text-xs text-slate-400">hrs / active day</span>
-        </div>
-        <p class="text-[11px] text-slate-400 mt-2">Based on recorded study days</p>
-      </div>
-
-      <!-- Total Sessions Card -->
-      <div class="glass-card rounded-2xl p-5 relative overflow-hidden group hover:border-accent-violet/40 transition-all duration-300">
-        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-accent-violet/10 rounded-full blur-xl group-hover:bg-accent-violet/20 transition-all"></div>
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Sessions</span>
-          <div class="p-2 bg-accent-violet/10 text-accent-violet rounded-lg">
-            <i data-lucide="book-open" class="w-5 h-5"></i>
-          </div>
-        </div>
-        <div class="flex items-baseline space-x-2">
-          <span id="kpiTotalSessions" class="text-3xl font-black text-white">0</span>
-          <span class="text-xs text-slate-400">completed</span>
-        </div>
-        <p class="text-[11px] text-slate-400 mt-2 text-ellipsis overflow-hidden whitespace-nowrap" id="kpiTopSubject">Top Subject: --</p>
-      </div>
-    </div>
-
-    <!-- Main Workspace Section: Left Form & Timer | Right Analytics Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      
-      <!-- Left Column: Stopwatch & Form (4 Cols on LG) -->
-      <div class="lg:col-span-4 space-y-6">
-
-        <!-- Live Focus Timer / Stopwatch Card -->
-        <div class="glass-card rounded-2xl p-6 border border-brand-500/20 relative overflow-hidden">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <i data-lucide="timer" class="w-4 h-4 text-brand-400"></i> Live Focus Timer
-            </h2>
-            <span id="timerStatus" class="text-[10px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400 border border-slate-700">
-              Idle
-            </span>
-          </div>
-
-          <!-- Timer Digital Display -->
-          <div class="text-center py-4 bg-slate-950/50 rounded-xl border border-slate-800/80 my-2">
-            <div id="timerDisplay" class="text-4xl sm:text-5xl font-mono font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-brand-400">
-              00:00:00
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/80 p-6 rounded-2xl border border-slate-800 backdrop-blur-md">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+                    <i data-lucide="calculator" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">FocusPulse</h1>
+                    <p class="text-xs text-slate-400">Math & Statistics Growth Analytics</p>
+                </div>
             </div>
-          </div>
+            <div class="flex items-center gap-3">
+                <button onclick="exportCSV()" class="px-4 py-2 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i> Export CSV
+                </button>
+                <button onclick="resetAllData()" class="px-4 py-2 text-xs font-semibold bg-rose-950/50 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 rounded-lg transition">
+                    Reset Data
+                </button>
+            </div>
+        </header>
 
-          <!-- Timer Controls -->
-          <div class="grid grid-cols-3 gap-2 mt-4">
-            <button id="timerToggleBtn" class="py-2.5 px-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-brand-600/30">
-              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i> <span id="timerToggleText">Start</span>
-            </button>
-            <button id="timerPauseBtn" disabled class="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5">
-              <i data-lucide="pause" class="w-3.5 h-3.5"></i> Pause
-            </button>
-            <button id="timerResetBtn" class="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5">
-              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
-            </button>
-          </div>
-
-          <button id="applyTimerBtn" disabled class="w-full mt-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5">
-            <i data-lucide="arrow-down-left" class="w-3.5 h-3.5"></i> Log Timer Duration Below
-          </button>
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between text-slate-400 mb-2">
+                    <span class="text-xs font-medium uppercase tracking-wider">Total Study Time</span>
+                    <i data-lucide="clock" class="w-5 h-5 text-indigo-400"></i>
+                </div>
+                <div class="text-2xl font-bold" id="stat-total-hours">0.0 hrs</div>
+            </div>
+            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between text-slate-400 mb-2">
+                    <span class="text-xs font-medium uppercase tracking-wider">Active Streak</span>
+                    <i data-lucide="flame" class="w-5 h-5 text-amber-500"></i>
+                </div>
+                <div class="text-2xl font-bold" id="stat-streak">0 Days</div>
+            </div>
+            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between text-slate-400 mb-2">
+                    <span class="text-xs font-medium uppercase tracking-wider">Daily Average</span>
+                    <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
+                </div>
+                <div class="text-2xl font-bold" id="stat-avg-hours">0.0 hrs/day</div>
+            </div>
+            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between text-slate-400 mb-2">
+                    <span class="text-xs font-medium uppercase tracking-wider">Top Subject</span>
+                    <i data-lucide="book-open" class="w-5 h-5 text-cyan-400"></i>
+                </div>
+                <div class="text-base font-bold truncate text-indigo-300" id="stat-top-subject">N/A</div>
+            </div>
         </div>
 
-        <!-- Session Logging Form -->
-        <div class="glass-card rounded-2xl p-6">
-          <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <i data-lucide="plus-circle" class="w-4 h-4 text-brand-400"></i> Log Study Session
-          </h2>
-
-          <form id="logForm" class="space-y-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1">Date</label>
-              <input type="date" id="inputDate" required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-brand-500 transition-colors">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1">Subject / Topic</label>
-              <input type="text" id="inputSubject" placeholder="e.g. Mathematics, Machine Learning" required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1">Duration (Hours)</label>
-              <input type="number" id="inputHours" step="0.1" min="0.1" max="24" placeholder="e.g. 2.5" required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1">Notes / Key Takeaway (Optional)</label>
-              <textarea id="inputNotes" rows="2" placeholder="e.g. Completed Chapter 4 exercises..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors resize-none"></textarea>
-            </div>
-
-            <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-accent-cyan hover:from-brand-500 hover:to-accent-cyan/90 text-white font-bold text-sm rounded-xl shadow-lg shadow-brand-600/25 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-              <i data-lucide="check" class="w-4 h-4"></i> Save Study Session
-            </button>
-          </form>
-        </div>
-
-      </div>
-
-      <!-- Right Column: Growth Analytics & Bar Chart (8 Cols on LG) -->
-      <div class="lg:col-span-8 space-y-6">
-
-        <!-- Growth Curve Line Chart Card -->
-        <div class="glass-card rounded-2xl p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
-                <i data-lucide="sparkles" class="w-4 h-4 text-brand-400"></i> Cumulative Growth Curve
-              </h2>
-              <p class="text-xs text-slate-400 mt-0.5">Watch your knowledge compounding trajectory over time</p>
-            </div>
+        <!-- Main Workspace -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <div class="flex items-center space-x-2">
-              <span class="text-xs text-slate-400 font-medium">Time Horizon:</span>
-              <select id="growthRangeFilter" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 text-slate-300 focus:outline-none focus:border-brand-500">
-                <option value="all">All Time</option>
-                <option value="30">Last 30 Days</option>
-                <option value="14">Last 14 Days</option>
-                <option value="7">Last 7 Days</option>
-              </select>
+            <!-- Left Side: Stopwatch & Form -->
+            <div class="space-y-6">
+                
+                <!-- Timer Card -->
+                <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i data-lucide="timer" class="w-4 h-4 text-indigo-400"></i> Live Focus Timer
+                        </span>
+                        <span id="timer-status" class="px-2 py-0.5 text-[10px] uppercase font-bold bg-slate-800 text-slate-400 rounded">IDLE</span>
+                    </div>
+                    <div class="text-center my-6">
+                        <div id="timer-display" class="font-mono text-5xl font-bold tracking-tight text-white mb-6">00:00:00</div>
+                        <div class="flex justify-center gap-3">
+                            <button id="btn-timer-start" onclick="toggleTimer()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
+                                <i data-lucide="play" class="w-4 h-4 fill-current"></i> Start
+                            </button>
+                            <button id="btn-timer-reset" onclick="resetTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">
+                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button onclick="autofillFromTimer()" class="w-full py-2 bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-800/50 text-indigo-300 rounded-xl text-xs font-medium transition flex items-center justify-center gap-2">
+                        <i data-lucide="arrow-down-left" class="w-4 h-4"></i> Log Timer Duration Below
+                    </button>
+                </div>
+
+                <!-- Log Entry Form -->
+                <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 space-y-4">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-400"></i> Log Study Session
+                    </h2>
+                    <form id="log-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Date</label>
+                            <input type="date" id="form-date" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Select Subject</label>
+                            <select id="form-subject" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                                <option value="" disabled selected>-- Select Course --</option>
+                                <option value="MTH-201 (Real analysis)">MTH-201 (Real analysis)</option>
+                                <option value="MTH-202 (differential calculus II)">MTH-202 (differential calculus II)</option>
+                                <option value="MTH-203 (Ordinary differential equation)">MTH-203 (Ordinary differential equation)</option>
+                                <option value="MTH-204 (Linear algebra II)">MTH-204 (Linear algebra II)</option>
+                                <option value="MTH-205 (Integral calculus II)">MTH-205 (Integral calculus II)</option>
+                                <option value="MTH-206 (Numerical analysis)">MTH-206 (Numerical analysis)</option>
+                                <option value="MTH-207 (discrete mathematics)">MTH-207 (discrete mathematics)</option>
+                                <option value="MTH-208 (Programming fundamentals)">MTH-208 (Programming fundamentals)</option>
+                                <option value="STAT-201 (Principles of statistics)">STAT-201 (Principles of statistics)</option>
+                                <option value="STAT-202 (Mathematical statistics)">STAT-202 (Mathematical statistics)</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Duration (Hours)</label>
+                            <input type="number" id="form-hours" step="0.1" min="0.1" max="24" required placeholder="e.g. 2.5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Topics / Notes</label>
+                            <input type="text" id="form-notes" placeholder="e.g. Chapter 3 Theorem proofs..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl text-sm transition shadow-lg shadow-indigo-600/20">
+                            Save Session
+                        </button>
+                    </form>
+                </div>
             </div>
-          </div>
 
-          <!-- Chart Area -->
-          <div class="relative w-full h-[320px]">
-            <canvas id="growthChart"></canvas>
-          </div>
-        </div>
+            <!-- Right Side: Charts -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Cumulative Growth Curve -->
+                <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h2 class="text-base font-semibold flex items-center gap-2">
+                                <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i> Cumulative Growth Curve
+                            </h2>
+                            <p class="text-xs text-slate-400">Track your total study hours compound over time</p>
+                        </div>
+                        <select id="time-filter" onchange="renderCharts()" class="bg-slate-950 border border-slate-800 text-xs rounded-lg px-3 py-1.5 text-slate-300 focus:outline-none">
+                            <option value="all">All Time</option>
+                            <option value="30">Last 30 Days</option>
+                            <option value="14">Last 14 Days</option>
+                            <option value="7">Last 7 Days</option>
+                        </select>
+                    </div>
+                    <div class="h-64 sm:h-72 w-full">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
 
-        <!-- Daily Hours Bar Chart Card -->
-        <div class="glass-card rounded-2xl p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
-                <i data-lucide="bar-chart-3" class="w-4 h-4 text-accent-cyan"></i> Daily Study Volume
-              </h2>
-              <p class="text-xs text-slate-400 mt-0.5">Hours logged per individual date</p>
+                <!-- Daily Hours Bar Chart -->
+                <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+                    <div class="mb-4">
+                        <h2 class="text-base font-semibold flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-400"></i> Daily Study Volume
+                        </h2>
+                        <p class="text-xs text-slate-400">Hours spent studying per day</p>
+                    </div>
+                    <div class="h-48 w-full">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <!-- Chart Area -->
-          <div class="relative w-full h-[240px]">
-            <canvas id="dailyChart"></canvas>
-          </div>
         </div>
 
-      </div>
-
-    </div>
-
-    <!-- Study History Log Table -->
-    <div class="glass-card rounded-2xl p-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
-            <i data-lucide="list-filter" class="w-4 h-4 text-brand-400"></i> Session History
-          </h2>
-          <p class="text-xs text-slate-400 mt-0.5">Filter, search, and manage logged study entries</p>
+        <!-- Session Logs Table -->
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <h2 class="text-base font-semibold flex items-center gap-2">
+                    <i data-lucide="list" class="w-4 h-4 text-indigo-400"></i> Session Logs
+                </h2>
+                <div class="flex gap-2">
+                    <select id="table-filter" onchange="renderTable()" class="bg-slate-950 border border-slate-800 text-xs rounded-lg px-3 py-1.5 text-slate-300">
+                        <option value="all">All Subjects</option>
+                        <option value="MTH-201 (Real analysis)">MTH-201</option>
+                        <option value="MTH-202 (differential calculus II)">MTH-202</option>
+                        <option value="MTH-203 (Ordinary differential equation)">MTH-203</option>
+                        <option value="MTH-204 (Linear algebra II)">MTH-204</option>
+                        <option value="MTH-205 (Integral calculus II)">MTH-205</option>
+                        <option value="MTH-206 (Numerical analysis)">MTH-206</option>
+                        <option value="MTH-207 (discrete mathematics)">MTH-207</option>
+                        <option value="MTH-208 (Programming fundamentals)">MTH-208</option>
+                        <option value="STAT-201 (Principles of statistics)">STAT-201</option>
+                        <option value="STAT-202 (Mathematical statistics)">STAT-202</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 text-slate-400 uppercase text-[10px]">
+                        <tr>
+                            <th class="p-3">Date</th>
+                            <th class="p-3">Subject</th>
+                            <th class="p-3">Duration</th>
+                            <th class="p-3">Notes</th>
+                            <th class="p-3 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-tbody" class="divide-y divide-slate-800">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-        <!-- Table Filters -->
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="relative">
-            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="tableSearchInput" placeholder="Search subject/note..." class="pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-700 text-xs rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500 w-44 sm:w-56">
-          </div>
-          <select id="tableSubjectFilter" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 text-slate-300 focus:outline-none focus:border-brand-500">
-            <option value="all">All Subjects</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Table Scroll Wrapper -->
-      <div class="overflow-x-auto border border-slate-800/80 rounded-xl">
-        <table class="w-full text-left text-xs text-slate-300">
-          <thead class="bg-slate-900/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
-            <tr>
-              <th scope="col" class="py-3 px-4">Date</th>
-              <th scope="col" class="py-3 px-4">Subject</th>
-              <th scope="col" class="py-3 px-4">Duration</th>
-              <th scope="col" class="py-3 px-4">Notes</th>
-              <th scope="col" class="py-3 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="logTableBody" class="divide-y divide-slate-800/60 font-normal">
-            <!-- Table rows populated dynamically -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Empty State -->
-      <div id="emptyState" class="hidden py-12 text-center">
-        <i data-lucide="book-open-check" class="w-10 h-10 text-slate-600 mx-auto mb-2"></i>
-        <p class="text-slate-400 text-sm font-medium">No study sessions found</p>
-        <p class="text-slate-600 text-xs">Log a session above to begin tracking your growth!</p>
-      </div>
     </div>
 
-  </main>
+    <script>
+        // Default Sample Data with your courses
+        const defaultLogs = [
+            { id: 1, date: '2026-11-01', subject: 'MTH-201 (Real analysis)', hours: 2.5, notes: 'Completeness axiom proofs' },
+            { id: 2, date: '2026-11-02', subject: 'MTH-203 (Ordinary differential equation)', hours: 3.0, notes: 'Second order linear equations' },
+            { id: 3, date: '2026-11-03', subject: 'STAT-201 (Principles of statistics)', hours: 1.5, notes: 'Probability distributions' },
+            { id: 4, date: '2026-11-04', subject: 'MTH-204 (Linear algebra II)', hours: 4.0, notes: 'Eigenvalues and Eigenvectors' },
+            { id: 5, date: '2026-11-05', subject: 'MTH-208 (Programming fundamentals)', hours: 3.5, notes: 'Functions & pointers in C' },
+            { id: 6, date: '2026-11-06', subject: 'STAT-202 (Mathematical statistics)', hours: 2.0, notes: 'Hypothesis testing' },
+            { id: 7, date: '2026-11-07', subject: 'MTH-206 (Numerical analysis)', hours: 3.0, notes: 'Newton-Raphson Method' }
+        ];
 
-  <!-- Footer -->
-  <footer class="border-t border-slate-800/60 py-6 text-center text-xs text-slate-500">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <p>FocusPulse Study Analytics &copy; <span id="yearSpan"></span></p>
-      <p class="flex items-center gap-1">
-        <span>Consistency is key to mastery.</span>
-        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-      </p>
-    </div>
-  </footer>
+        let logs = JSON.parse(localStorage.getItem('study_logs')) || defaultLogs;
+        
+        // Timer Variables
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let isTimerRunning = false;
 
-  <!-- Application Logic -->
-  <script>
-    // Initial Seed Data (Used if localStorage is empty for instant demonstration)
-    const SEED_DATA = [
-      { id: '1', date: getPastDateStr(14), subject: 'Mathematics', hours: 2.0, notes: 'Linear algebra review and vectors' },
-      { id: '2', date: getPastDateStr(12), subject: 'Computer Science', hours: 3.5, notes: 'Data structures & binary trees' },
-      { id: '3', date: getPastDateStr(10), subject: 'Physics', hours: 1.5, notes: 'Quantum mechanics wave function' },
-      { id: '4', date: getPastDateStr(9), subject: 'Mathematics', hours: 2.5, notes: 'Differential equations exercises' },
-      { id: '5', date: getPastDateStr(7), subject: 'Computer Science', hours: 4.0, notes: 'Algorithm complexity and Dynamic Programming' },
-      { id: '6', date: getPastDateStr(5), subject: 'Language Study', hours: 1.0, notes: 'Vocabulary expansion and practice' },
-      { id: '7', date: getPastDateStr(4), subject: 'Mathematics', hours: 3.0, notes: 'Calculus derivatives & integrals' },
-      { id: '8', date: getPastDateStr(2), subject: 'Computer Science', hours: 2.5, notes: 'System architecture fundamentals' },
-      { id: '9', date: getPastDateStr(1), subject: 'Physics', hours: 3.0, notes: 'Thermodynamics problem set' },
-      { id: '10', date: getPastDateStr(0), subject: 'Computer Science', hours: 2.0, notes: 'React hook patterns' }
-    ];
-
-    function getPastDateStr(daysAgo) {
-      const d = new Date();
-      d.setDate(d.getDate() - daysAgo);
-      return d.toISOString().split('T')[0];
-    }
-
-    // App State Management
-    let studyLogs = [];
-    let growthChartInstance = null;
-    let dailyChartInstance = null;
-
-    // Timer State Variables
-    let timerInterval = null;
-    let timerSeconds = 0;
-    let isTimerRunning = false;
-
-    // DOM Elements
-    const inputDate = document.getElementById('inputDate');
-    const inputSubject = document.getElementById('inputSubject');
-    const inputHours = document.getElementById('inputHours');
-    const inputNotes = document.getElementById('inputNotes');
-    const logForm = document.getElementById('logForm');
-    const logTableBody = document.getElementById('logTableBody');
-    const emptyState = document.getElementById('emptyState');
-    const tableSearchInput = document.getElementById('tableSearchInput');
-    const tableSubjectFilter = document.getElementById('tableSubjectFilter');
-    const growthRangeFilter = document.getElementById('growthRangeFilter');
-
-    // KPI Elements
-    const kpiTotalHours = document.getElementById('kpiTotalHours');
-    const kpiGrowthTag = document.getElementById('kpiGrowthTag');
-    const kpiStreak = document.getElementById('kpiStreak');
-    const kpiStreakMsg = document.getElementById('kpiStreakMsg');
-    const kpiAvgHours = document.getElementById('kpiAvgHours');
-    const kpiTotalSessions = document.getElementById('kpiTotalSessions');
-    const kpiTopSubject = document.getElementById('kpiTopSubject');
-
-    // Timer Elements
-    const timerDisplay = document.getElementById('timerDisplay');
-    const timerStatus = document.getElementById('timerStatus');
-    const timerToggleBtn = document.getElementById('timerToggleBtn');
-    const timerToggleText = document.getElementById('timerToggleText');
-    const timerPauseBtn = document.getElementById('timerPauseBtn');
-    const timerResetBtn = document.getElementById('timerResetBtn');
-    const applyTimerBtn = document.getElementById('applyTimerBtn');
-
-    // Initialize App
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('yearSpan').textContent = new Date().getFullYear();
-      inputDate.value = new Date().toISOString().split('T')[0];
-
-      loadLogs();
-      initCharts();
-      updateUI();
-      setupTimerControls();
-
-      lucide.createIcons();
-    });
-
-    // LocalStorage Loading & Saving
-    function loadLogs() {
-      const stored = localStorage.getItem('focuspulse_logs');
-      if (stored) {
-        try {
-          studyLogs = JSON.parse(stored);
-        } catch (e) {
-          studyLogs = [...SEED_DATA];
-        }
-      } else {
-        studyLogs = [...SEED_DATA];
-        saveLogs();
-      }
-    }
-
-    function saveLogs() {
-      localStorage.setItem('focuspulse_logs', JSON.stringify(studyLogs));
-    }
-
-    // Timer Functions
-    function setupTimerControls() {
-      timerToggleBtn.addEventListener('click', () => {
-        if (!isTimerRunning) {
-          startTimer();
-        } else {
-          pauseTimer();
-        }
-      });
-
-      timerPauseBtn.addEventListener('click', pauseTimer);
-      timerResetBtn.addEventListener('click', resetTimer);
-
-      applyTimerBtn.addEventListener('click', () => {
-        if (timerSeconds < 60) {
-          alert("Session too short to log (under 1 minute).");
-          return;
-        }
-        const hours = (timerSeconds / 3600).toFixed(2);
-        inputHours.value = hours;
-        inputHours.scrollIntoView({ behavior: 'smooth' });
-        inputHours.focus();
-      });
-    }
-
-    function startTimer() {
-      isTimerRunning = true;
-      timerInterval = setInterval(() => {
-        timerSeconds++;
-        updateTimerDisplay();
-      }, 1000);
-
-      timerStatus.textContent = "Focusing";
-      timerStatus.className = "text-[10px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse";
-      timerToggleText.textContent = "Pause";
-      timerPauseBtn.disabled = false;
-      applyTimerBtn.disabled = false;
-    }
-
-    function pauseTimer() {
-      isTimerRunning = false;
-      clearInterval(timerInterval);
-      timerStatus.textContent = "Paused";
-      timerStatus.className = "text-[10px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
-      timerToggleText.textContent = "Resume";
-    }
-
-    function resetTimer() {
-      pauseTimer();
-      timerSeconds = 0;
-      updateTimerDisplay();
-      timerStatus.textContent = "Idle";
-      timerStatus.className = "text-[10px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400 border border-slate-700";
-      timerToggleText.textContent = "Start";
-      timerPauseBtn.disabled = true;
-      applyTimerBtn.disabled = true;
-    }
-
-    function updateTimerDisplay() {
-      const hrs = Math.floor(timerSeconds / 3600);
-      const mins = Math.floor((timerSeconds % 3600) / 60);
-      const secs = timerSeconds % 60;
-      timerDisplay.textContent = 
-        `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-
-    // Form Submission
-    logForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const newLog = {
-        id: Date.now().toString(),
-        date: inputDate.value,
-        subject: inputSubject.value.trim(),
-        hours: parseFloat(inputHours.value),
-        notes: inputNotes.value.trim()
-      };
-
-      studyLogs.push(newLog);
-      saveLogs();
-      updateUI();
-
-      // Reset fields (except date)
-      inputSubject.value = '';
-      inputHours.value = '';
-      inputNotes.value = '';
-
-      // Reset timer if timer was used
-      if (timerSeconds > 0) {
-        resetTimer();
-      }
-    });
-
-    // Delete Log Entry
-    window.deleteLog = function(id) {
-      studyLogs = studyLogs.filter(log => log.id !== id);
-      saveLogs();
-      updateUI();
-    };
-
-    // Global Search & Filter Change Events
-    tableSearchInput.addEventListener('input', renderTable);
-    tableSubjectFilter.addEventListener('change', renderTable);
-    growthRangeFilter.addEventListener('change', updateCharts);
-
-    // Export to CSV
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      if (studyLogs.length === 0) {
-        alert("No logs to export!");
-        return;
-      }
-      let csvContent = "data:text/csv;charset=utf-8,Date,Subject,Hours,Notes\n";
-      studyLogs.forEach(row => {
-        const escapedNotes = `"${(row.notes || '').replace(/"/g, '""')}"`;
-        csvContent += `${row.date},"${row.subject}",${row.hours},${escapedNotes}\n`;
-      });
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `study_hours_log_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
-
-    // Reset Data Event
-    document.getElementById('clearDataBtn').addEventListener('click', () => {
-      if (confirm("Are you sure you want to clear all logged sessions? This cannot be undone.")) {
-        studyLogs = [];
-        saveLogs();
-        updateUI();
-      }
-    });
-
-    // Main Update Cycle
-    function updateUI() {
-      populateSubjectDropdown();
-      renderKPIs();
-      renderTable();
-      updateCharts();
-    }
-
-    // Subject Dropdown Population
-    function populateSubjectDropdown() {
-      const subjects = Array.from(new Set(studyLogs.map(l => l.subject))).sort();
-      const currentVal = tableSubjectFilter.value;
-      
-      tableSubjectFilter.innerHTML = '<option value="all">All Subjects</option>';
-      subjects.forEach(sub => {
-        const opt = document.createElement('option');
-        opt.value = sub;
-        opt.textContent = sub;
-        tableSubjectFilter.appendChild(opt);
-      });
-
-      if (subjects.includes(currentVal)) {
-        tableSubjectFilter.value = currentVal;
-      } else {
-        tableSubjectFilter.value = 'all';
-      }
-    }
-
-    // Calculate & Render KPI Cards
-    function renderKPIs() {
-      if (studyLogs.length === 0) {
-        kpiTotalHours.textContent = '0.0';
-        kpiStreak.textContent = '0';
-        kpiStreakMsg.textContent = 'Log daily to start a streak!';
-        kpiAvgHours.textContent = '0.0';
-        kpiTotalSessions.textContent = '0';
-        kpiTopSubject.textContent = 'Top Subject: --';
-        kpiGrowthTag.innerHTML = `<i data-lucide="arrow-right" class="w-3.5 h-3.5 mr-0.5"></i> 0%`;
+        // Initialize Lucide icons
         lucide.createIcons();
-        return;
-      }
 
-      // Total Hours
-      const totalHours = studyLogs.reduce((acc, log) => acc + log.hours, 0);
-      kpiTotalHours.textContent = totalHours.toFixed(1);
+        // Set default date to today
+        document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
 
-      // Total Sessions
-      kpiTotalSessions.textContent = studyLogs.length;
-
-      // Unique Active Days & Average
-      const uniqueDates = Array.from(new Set(studyLogs.map(l => l.date)));
-      const avgHours = totalHours / (uniqueDates.length || 1);
-      kpiAvgHours.textContent = avgHours.toFixed(1);
-
-      // Streak Calculation
-      const streak = calculateStreak(uniqueDates);
-      kpiStreak.textContent = streak;
-      if (streak === 0) {
-        kpiStreakMsg.textContent = 'Log a session today to start!';
-      } else if (streak === 1) {
-        kpiStreakMsg.textContent = 'Great start! Keep going tomorrow.';
-      } else {
-        kpiStreakMsg.textContent = `🔥 ${streak} days continuous focus!`;
-      }
-
-      // Top Subject
-      const subjectMap = {};
-      studyLogs.forEach(l => {
-        subjectMap[l.subject] = (subjectMap[l.subject] || 0) + l.hours;
-      });
-      let topSub = '--';
-      let maxHours = 0;
-      for (const [sub, hrs] of Object.entries(subjectMap)) {
-        if (hrs > maxHours) {
-          maxHours = hrs;
-          topSub = sub;
+        // Core Functions
+        function saveLogs() {
+            localStorage.setItem('study_logs', JSON.stringify(logs));
+            updateApp();
         }
-      }
-      kpiTopSubject.textContent = `Top Subject: ${topSub} (${maxHours.toFixed(1)}h)`;
 
-      // 7-day Growth rate comparison
-      const now = new Date();
-      const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const prev7Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-
-      const recent7Hrs = studyLogs
-        .filter(l => new Date(l.date) >= last7Days)
-        .reduce((sum, l) => sum + l.hours, 0);
-
-      const prior7Hrs = studyLogs
-        .filter(l => new Date(l.date) >= prev7Days && new Date(l.date) < last7Days)
-        .reduce((sum, l) => sum + l.hours, 0);
-
-      let growthPct = 0;
-      if (prior7Hrs > 0) {
-        growthPct = Math.round(((recent7Hrs - prior7Hrs) / prior7Hrs) * 100);
-      } else if (recent7Hrs > 0) {
-        growthPct = 100;
-      }
-
-      if (growthPct >= 0) {
-        kpiGrowthTag.className = "text-emerald-400 font-semibold inline-flex items-center";
-        kpiGrowthTag.innerHTML = `<i data-lucide="arrow-up-right" class="w-3.5 h-3.5 mr-0.5"></i> +${growthPct}%`;
-      } else {
-        kpiGrowthTag.className = "text-rose-400 font-semibold inline-flex items-center";
-        kpiGrowthTag.innerHTML = `<i data-lucide="arrow-down-right" class="w-3.5 h-3.5 mr-0.5"></i> ${growthPct}%`;
-      }
-
-      lucide.createIcons();
-    }
-
-    function calculateStreak(dates) {
-      if (!dates || dates.length === 0) return 0;
-      const sortedDates = dates.map(d => new Date(d)).sort((a, b) => b - a);
-
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      const mostRecent = new Date(sortedDates[0]);
-      mostRecent.setHours(0,0,0,0);
-
-      // If the most recent entry isn't today or yesterday, streak is broken
-      if (mostRecent < yesterday) return 0;
-
-      let streak = 0;
-      let checkDate = mostRecent;
-
-      for (let i = 0; i < sortedDates.length; i++) {
-        const currentDate = sortedDates[i];
-        currentDate.setHours(0,0,0,0);
-
-        const diffTime = Math.abs(checkDate - currentDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 0) {
-          if (i === 0) streak++;
-        } else if (diffDays === 1) {
-          streak++;
-          checkDate = currentDate;
-        } else {
-          break;
+        function updateApp() {
+            renderMetrics();
+            renderCharts();
+            renderTable();
         }
-      }
-      return streak;
-    }
 
-    // Render Sessions Table
-    function renderTable() {
-      const query = tableSearchInput.value.toLowerCase().trim();
-      const subjectFilter = tableSubjectFilter.value;
+        // Metrics Calculation
+        function renderMetrics() {
+            const totalHours = logs.reduce((acc, item) => acc + item.hours, 0);
+            document.getElementById('stat-total-hours').innerText = totalHours.toFixed(1) + ' hrs';
 
-      let filtered = studyLogs.filter(log => {
-        const matchesQuery = log.subject.toLowerCase().includes(query) || 
-                             (log.notes && log.notes.toLowerCase().includes(query));
-        const matchesSubject = subjectFilter === 'all' || log.subject === subjectFilter;
-        return matchesQuery && matchesSubject;
-      });
+            // Unique dates & average calculation
+            const uniqueDates = [...new Set(logs.map(l => l.date))].sort();
+            const avg = uniqueDates.length ? (totalHours / uniqueDates.length) : 0;
+            document.getElementById('stat-avg-hours').innerText = avg.toFixed(1) + ' hrs/day';
 
-      // Sort newest dates first
-      filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      logTableBody.innerHTML = '';
-
-      if (filtered.length === 0) {
-        emptyState.classList.remove('hidden');
-      } else {
-        emptyState.classList.add('hidden');
-        filtered.forEach(log => {
-          const tr = document.createElement('tr');
-          tr.className = 'hover:bg-slate-800/40 transition-colors';
-          tr.innerHTML = `
-            <td class="py-3 px-4 font-medium text-slate-200 whitespace-nowrap">${log.date}</td>
-            <td class="py-3 px-4 font-semibold text-brand-300">
-              <span class="inline-block px-2.5 py-1 bg-brand-500/10 border border-brand-500/20 rounded-lg text-xs">
-                ${escapeHTML(log.subject)}
-              </span>
-            </td>
-            <td class="py-3 px-4 font-bold text-slate-100">${log.hours.toFixed(1)} hrs</td>
-            <td class="py-3 px-4 text-slate-400 max-w-xs truncate" title="${escapeHTML(log.notes || '')}">
-              ${escapeHTML(log.notes || '--')}
-            </td>
-            <td class="py-3 px-4 text-right">
-              <button onclick="deleteLog('${log.id}')" class="p-1.5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 rounded-lg transition-colors" title="Delete entry">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </td>
-          `;
-          logTableBody.appendChild(tr);
-        });
-      }
-
-      lucide.createIcons();
-    }
-
-    function escapeHTML(str) {
-      return str.replace(/[&<>'"]/g, 
-        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-      );
-    }
-
-    // Chart Setup & Rendering
-    function initCharts() {
-      const growthCtx = document.getElementById('growthChart').getContext('2d');
-      const dailyCtx = document.getElementById('dailyChart').getContext('2d');
-
-      // Gradient for Growth Curve
-      const growthGrad = growthCtx.createLinearGradient(0, 0, 0, 300);
-      growthGrad.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
-      growthGrad.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
-
-      // Growth Curve Chart Instance
-      growthChartInstance = new Chart(growthCtx, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Cumulative Hours Logged',
-            data: [],
-            borderColor: '#6366f1',
-            borderWidth: 3,
-            backgroundColor: growthGrad,
-            fill: true,
-            tension: 0.35,
-            pointBackgroundColor: '#06b6d4',
-            pointBorderColor: '#ffffff',
-            pointBorderWidth: 2,
-            pointRadius: 4,
-            pointHoverRadius: 7
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#0f172a',
-              titleColor: '#f8fafc',
-              bodyColor: '#c7d2fe',
-              borderColor: '#334155',
-              borderWidth: 1,
-              padding: 12,
-              displayColors: false,
-              callbacks: {
-                label: (ctx) => `Cumulative Study: ${ctx.parsed.y.toFixed(1)} hrs`
-              }
+            // Top Subject calculation
+            const subjectMap = {};
+            logs.forEach(l => {
+                subjectMap[l.subject] = (subjectMap[l.subject] || 0) + l.hours;
+            });
+            let topSubject = 'N/A';
+            let maxHrs = 0;
+            for (const [subj, hrs] of Object.entries(subjectMap)) {
+                if (hrs > maxHrs) { maxHrs = hrs; topSubject = subj; }
             }
-          },
-          scales: {
-            x: {
-              grid: { color: 'rgba(255,255,255,0.05)' },
-              ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 10 } }
-            },
-            y: {
-              beginAtZero: true,
-              grid: { color: 'rgba(255,255,255,0.05)' },
-              ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 10 } }
+            document.getElementById('stat-top-subject').innerText = topSubject;
+
+            // Simple Streak Calculator
+            let streak = 0;
+            if (uniqueDates.length > 0) {
+                const today = new Date().toISOString().split('T')[0];
+                let checkDate = new Date();
+                
+                while (true) {
+                    const dateStr = checkDate.toISOString().split('T')[0];
+                    if (uniqueDates.includes(dateStr)) {
+                        streak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else if (dateStr === today) {
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
             }
-          }
+            document.getElementById('stat-streak').innerText = streak + ' Days';
         }
-      });
 
-      // Daily Bar Chart Instance
-      const dailyGrad = dailyCtx.createLinearGradient(0, 0, 0, 240);
-      dailyGrad.addColorStop(0, '#06b6d4');
-      dailyGrad.addColorStop(1, '#3b82f6');
+        // Chart Instance Variables
+        let growthChartInstance = null;
+        let dailyChartInstance = null;
 
-      dailyChartInstance = new Chart(dailyCtx, {
-        type: 'bar',
-        data: {
-          labels: [],
-          datasets: [{
-            label: 'Daily Hours',
-            data: [],
-            backgroundColor: dailyGrad,
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#0f172a',
-              titleColor: '#f8fafc',
-              bodyColor: '#a5f3fc',
-              borderColor: '#334155',
-              borderWidth: 1,
-              padding: 10,
-              displayColors: false,
-              callbacks: {
-                label: (ctx) => `Logged: ${ctx.parsed.y.toFixed(1)} hrs`
-              }
+        function renderCharts() {
+            const filterValue = document.getElementById('time-filter').value;
+            let sortedLogs = [...logs].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (filterValue !== 'all') {
+                const limitDays = parseInt(filterValue);
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - limitDays);
+                sortedLogs = sortedLogs.filter(l => new Date(l.date) >= cutoff);
             }
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 10 } }
-            },
-            y: {
-              beginAtZero: true,
-              grid: { color: 'rgba(255,255,255,0.05)' },
-              ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 10 } }
+
+            // Aggregate by date
+            const dateMap = {};
+            sortedLogs.forEach(l => {
+                dateMap[l.date] = (dateMap[l.date] || 0) + l.hours;
+            });
+
+            const labels = Object.keys(dateMap);
+            const dailyHours = Object.values(dateMap);
+            
+            // Cumulative growth values
+            let cumulative = 0;
+            const cumulativeHours = dailyHours.map(h => {
+                cumulative += h;
+                return cumulative;
+            });
+
+            // Growth Chart (Line)
+            const ctxGrowth = document.getElementById('growthChart').getContext('2d');
+            if (growthChartInstance) growthChartInstance.destroy();
+            growthChartInstance = new Chart(ctxGrowth, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cumulative Hours',
+                        data: cumulativeHours,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // Daily Chart (Bar)
+            const ctxDaily = document.getElementById('dailyChart').getContext('2d');
+            if (dailyChartInstance) dailyChartInstance.destroy();
+            dailyChartInstance = new Chart(ctxDaily, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Hours Studied',
+                        data: dailyHours,
+                        backgroundColor: '#4f46e5',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        // Render Table
+        function renderTable() {
+            const tbody = document.getElementById('logs-tbody');
+            const filterSubject = document.getElementById('table-filter').value;
+            tbody.innerHTML = '';
+
+            let filteredLogs = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+            if (filterSubject !== 'all') {
+                filteredLogs = filteredLogs.filter(l => l.subject === filterSubject);
             }
-          }
+
+            filteredLogs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition';
+                tr.innerHTML = `
+                    <td class="p-3 whitespace-nowrap text-slate-300 font-medium">${log.date}</td>
+                    <td class="p-3 text-indigo-400 font-medium">${log.subject}</td>
+                    <td class="p-3 font-semibold text-slate-200">${log.hours} hrs</td>
+                    <td class="p-3 text-slate-400">${log.notes || '-'}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteLog(${log.id})" class="text-rose-400 hover:text-rose-300 p-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
         }
-      });
-    }
 
-    function updateCharts() {
-      if (!growthChartInstance || !dailyChartInstance) return;
+        // Form Submission
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const date = document.getElementById('form-date').value;
+            const subject = document.getElementById('form-subject').value;
+            const hours = parseFloat(document.getElementById('form-hours').value);
+            const notes = document.getElementById('form-notes').value;
 
-      // Group hours by date
-      const dateMap = {};
-      studyLogs.forEach(log => {
-        dateMap[log.date] = (dateMap[log.date] || 0) + log.hours;
-      });
+            if (!date || !subject || isNaN(hours)) return;
 
-      // Sort dates chronologically
-      let sortedDates = Object.keys(dateMap).sort((a, b) => new Date(a) - new Date(b));
+            const newLog = { id: Date.now(), date, subject, hours, notes };
+            logs.push(newLog);
+            saveLogs();
 
-      // Filter by Horizon
-      const range = growthRangeFilter.value;
-      if (range !== 'all' && sortedDates.length > 0) {
-        const daysLimit = parseInt(range, 10);
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - daysLimit);
-        sortedDates = sortedDates.filter(d => new Date(d) >= cutoff);
-      }
-
-      // Calculate Daily & Cumulative Values
-      const dailyValues = [];
-      const cumulativeValues = [];
-      let runningTotal = 0;
-
-      // Calculate base cumulative sum if filtering horizon
-      if (range !== 'all') {
-        const allDates = Object.keys(dateMap).sort((a, b) => new Date(a) - new Date(b));
-        const firstFilteredDate = sortedDates[0];
-        allDates.forEach(d => {
-          if (new Date(d) < new Date(firstFilteredDate)) {
-            runningTotal += dateMap[d];
-          }
-        });
-      }
-
-      sortedDates.forEach(d => {
-        const dayHours = dateMap[d];
-        runningTotal += dayHours;
-        dailyValues.push(dayHours);
-        cumulativeValues.push(runningTotal);
-      });
-
-      // Format Labels (e.g., "Oct 12")
-      const formattedLabels = sortedDates.map(d => {
-        const parts = d.split('-');
-        if (parts.length === 3) {
-          const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-          return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            // Reset form fields
+            document.getElementById('form-hours').value = '';
+            document.getElementById('form-notes').value = '';
         }
-        return d;
-      });
 
-      // Update Growth Line Chart
-      growthChartInstance.data.labels = formattedLabels;
-      growthChartInstance.data.datasets[0].data = cumulativeValues;
-      growthChartInstance.update();
+        // Delete Log
+        function deleteLog(id) {
+            logs = logs.filter(l => l.id !== id);
+            saveLogs();
+        }
 
-      // Update Daily Bar Chart
-      dailyChartInstance.data.labels = formattedLabels;
-      dailyChartInstance.data.datasets[0].data = dailyValues;
-      dailyChartInstance.update();
-    }
-  </script>
+        // Stopwatch Timer Logic
+        function toggleTimer() {
+            const btn = document.getElementById('btn-timer-start');
+            const status = document.getElementById('timer-status');
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                btn.innerHTML = `<i data-lucide="play" class="w-4 h-4 fill-current"></i> Resume`;
+                status.innerText = 'PAUSED';
+                status.className = 'px-2 py-0.5 text-[10px] uppercase font-bold bg-amber-950/60 text-amber-400 rounded';
+            } else {
+                isTimerRunning = true;
+                timerInterval = setInterval(() => {
+                    timerSeconds++;
+                    updateTimerDisplay();
+                }, 1000);
+                btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4 fill-current"></i> Pause`;
+                status.innerText = 'FOCUSING';
+                status.className = 'px-2 py-0.5 text-[10px] uppercase font-bold bg-emerald-950/60 text-emerald-400 rounded';
+            }
+            lucide.createIcons();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerSeconds = 0;
+            updateTimerDisplay();
+            document.getElementById('btn-timer-start').innerHTML = `<i data-lucide="play" class="w-4 h-4 fill-current"></i> Start`;
+            const status = document.getElementById('timer-status');
+            status.innerText = 'IDLE';
+            status.className = 'px-2 py-0.5 text-[10px] uppercase font-bold bg-slate-800 text-slate-400 rounded';
+            lucide.createIcons();
+        }
+
+        function updateTimerDisplay() {
+            const hrs = String(Math.floor(timerSeconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((timerSeconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(timerSeconds % 60).padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${hrs}:${mins}:${secs}`;
+        }
+
+        function autofillFromTimer() {
+            const hoursCalculated = (timerSeconds / 3600).toFixed(2);
+            document.getElementById('form-hours').value = hoursCalculated > 0 ? hoursCalculated : 0.1;
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,ID,Date,Subject,Hours,Notes\n";
+            logs.forEach(l => {
+                csvContent += `${l.id},${l.date},"${l.subject}",${l.hours},"${l.notes || ''}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "study_growth_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function resetAllData() {
+            if (confirm("Are you sure you want to reset all study data?")) {
+                logs = [];
+                saveLogs();
+            }
+        }
+
+        // Initialize App
+        updateApp();
+    </script>
 </body>
 </html>
